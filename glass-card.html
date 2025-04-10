@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Glass Card with Motion-Based Lighting</title>
+  <style>
+    :root {
+      --dx: 0;
+      --dy: 0;
+      --glossy-x: 50%;
+      --glossy-y: 50%;
+    }
+
+    body {
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: url('https://images.unsplash.com/photo-1503264116251-35a269479413?auto=format&fit=crop&w=1950&q=80') no-repeat center center;
+      background-size: cover;
+      font-family: sans-serif;
+    }
+
+    #enable-motion {
+      position: absolute;
+      top: 1rem;
+      left: 1rem;
+      z-index: 10;
+      padding: 0.75rem 1.25rem;
+      font-size: 1rem;
+      background: rgba(255, 255, 255, 0.85);
+      border: none;
+      border-radius: 0.5rem;
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    }
+
+    .glass-card {
+      position: relative;
+      width: 300px;
+      padding: 2rem;
+      border-radius: 1rem;
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      box-shadow:
+        calc(var(--dx) * 0.5px) calc(var(--dy) * 0.5px) 30px rgba(0, 0, 0, 0.3),
+        inset calc(var(--dx) * -1px) calc(var(--dy) * -1px) 20px rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      color: white;
+      text-align: center;
+      overflow: hidden;
+    }
+
+    .glass-card .glossy {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle at var(--glossy-x) var(--glossy-y), rgba(255, 255, 255, 0.3), transparent 60%);
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      mix-blend-mode: screen;
+    }
+  </style>
+</head>
+<body>
+
+  <button id="enable-motion">Enable Motion Effects</button>
+
+  <div class="glass-card">
+    <div class="glossy"></div>
+    <h2>Glass Card</h2>
+    <p>Tilt your phone to shift the light!</p>
+  </div>
+
+  <script>
+    function handleOrientation(event) {
+      const gamma = event.gamma || 0;
+      const beta = event.beta || 0;
+
+      const dx = Math.max(-10, Math.min(10, gamma));
+      const dy = Math.max(-10, Math.min(10, beta - 90)); // calibrated for portrait mode
+
+      document.documentElement.style.setProperty('--dx', dx.toFixed(1));
+      document.documentElement.style.setProperty('--dy', dy.toFixed(1));
+
+      const glossX = 50 + dx * 2.5;
+      const glossY = 50 + dy * 2.5;
+      document.documentElement.style.setProperty('--glossy-x', `${glossX}%`);
+      document.documentElement.style.setProperty('--glossy-y', `${glossY}%`);
+    }
+
+    function enableMotion() {
+      const button = document.getElementById('enable-motion');
+      button.style.display = 'none';
+
+      if (typeof DeviceOrientationEvent?.requestPermission === 'function') {
+        DeviceOrientationEvent.requestPermission().then(permissionState => {
+          if (permissionState === 'granted') {
+            window.addEventListener('deviceorientation', handleOrientation);
+          } else {
+            alert('Motion permission was denied.');
+          }
+        }).catch(err => {
+          console.error(err);
+          alert('Error requesting motion permission.');
+        });
+      } else {
+        // Android or desktop fallback
+        window.addEventListener('deviceorientation', handleOrientation);
+      }
+    }
+
+    document.getElementById('enable-motion').addEventListener('click', enableMotion);
+  </script>
+
+</body>
+</html>
